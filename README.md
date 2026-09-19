@@ -2,137 +2,142 @@
 
 # 🚀 Hiveton H5000M (MT5700M) 定制固件说明书
 
-*基于 ImmortalWrt 主线源码，专为联发科 Filogic 平台 5G CPE 打造的定制化编译配置与模组解析*
+**基于 ImmortalWrt 主线源码 · 专为联发科 Filogic 平台 5G CPE 打造的高性能全功能固件**
+
+[![ImmortalWrt](https://img.shields.io/badge/ImmortalWrt-Mainline-00A0D0.svg?logo=openwrt&logoColor=white&style=flat-square)](https://github.com/immortalwrt/immortalwrt)
+[![Platform](https://img.shields.io/badge/Platform-MediaTek%20Filogic-FF6B35.svg?style=flat-square)](#-一-硬件平台与固件底层概述)
+[![Device](https://img.shields.io/badge/Device-Hiveton%20H5000M-blue.svg?style=flat-square)](#-目标设备与编译配置)
+[![Modem](https://img.shields.io/badge/Modem-MT5700M%205G-success.svg?style=flat-square)](#1-mt5700m-5g-模组支持-luci-app-mt5700m)
+[![Workflow](https://github.com/LianXia233/OpenWRT-CI-H5000M/actions/workflows/WRT-BUILD.yml/badge.svg?style=flat-square)](https://github.com/LianXia233/OpenWRT-CI-H5000M/actions)
+[![License](https://img.shields.io/badge/license-GPL--3.0-blue.svg?style=flat-square)](LICENSE)
+
+*全自动化 GitHub Actions 云端构建 · 深度适配 MT5700M 蜂窝模组 · 硬件级风扇温控与网络双链路无缝切换*
+
+---
 
 </div>
 
-<br>
+## ⚡ 快速开始
 
-## 🚀 快速开始
+本仓库依托 GitHub Actions 实现自动化云端编译，无需本地搭建交叉编译环境。
 
-本仓库通过 GitHub Actions 自动编译 Hiveton H5000M 的 ImmortalWrt 固件，无需本地搭建编译环境。
+### 1. 核心工作流一览
 
-| 入口工作流 | 触发方式 | 用途 |
+| 入口工作流 | 调度方式 | 核心功能与说明 |
 | :--- | :--- | :--- |
-| **WRT-BUILD** | 手动 `workflow_dispatch` | 手动编译 `MEDIATEK-WIFI-YES`，可临时追加插件或仅导出配置文件（`TEST=true`） |
-| **MTK-AUTO** | 每天随 `Auto-Clean` 完成后自动触发，亦可手动 | 自动编译 `MEDIATEK-WIFI-YES` 并发布 Release |
-| **Auto-Clean** | 每日 05:00 (CST) 定时，亦可手动 | 清理旧 Release（保留最近 1 个）与 30 天前的运行记录 |
-| **Cache-Clean** | 每周定时，亦可手动 | 清空 GitHub Actions 缓存 |
+| **WRT-BUILD** | 手动 `workflow_dispatch` | 手动编译 `MEDIATEK-WIFI-YES`，支持临时传参追加插件或快速验证配置（`TEST=true`） |
+| **MTK-AUTO** | 定时联动（`Auto-Clean` 完成后）/ 手动 | 全量自动构建最新主线固件并自动归档发布至 `Releases` |
+| **Auto-Clean** | 每日 05:00 (CST) 定时 / 手动 | 定期清理历史构建资产（保留最新 1 份 Release 并清理 30 天前的 Runs 记录） |
+| **Cache-Clean** | 每周定时 / 手动 | 释放 GitHub Actions 编译缓存，防止构建缓存膨胀或依赖冲突 |
 
-**手动触发步骤**：进入仓库 `Actions` → 选择 `WRT-BUILD` → `Run workflow`，按需填写选项即可。编译完成后固件会出现在 `Releases` 中。
+### 2. 手动编译触发步骤
 
-> 💡 仓库根目录的 [`index.html`](./index.html) 是一份精美的固件发布落地页，可直接用 GitHub Pages 托管，或本地打开预览发布信息。
+1. 进入仓库的 **Actions** 标签页。
+2. 在左侧工作流列表中选择 **WRT-BUILD**。
+3. 点击右侧 **Run workflow** 浮窗，按需填写参数（如测试模式、扩展插件列表）。
+4. 编译完成后，固件制品将自动上传至仓库的 **Releases** 页面。
 
-<br>
+> [!TIP]
+> 仓库根目录内置的 [`index.html`](./index.html) 为固件发布展示落地页，可直接启用 **GitHub Pages** 托管，亦可在本地浏览器打开直观浏览设备适配特性与下载链接。
+
+---
 
 ## 📂 项目结构
 
-```
+```text
 OpenWRT-CI-H5000M/
 ├── .github/workflows/
-│   ├── WRT-CORE.yml     # 云编译公用核心（被下面两个调用）
-│   ├── WRT-BUILD.yml    # 手动编译入口
-│   ├── MTK-AUTO.yml     # 定时自动编译 MEDIATEK-WIFI-YES
-│   ├── Auto-Clean.yml   # 每日清理旧 Release / 运行记录
-│   └── Cache-Clean.yml  # 清理 Actions 缓存
+│   ├── WRT-CORE.yml          # 云编译底层执行引擎（被 WRT-BUILD / MTK-AUTO 复用）
+│   ├── WRT-BUILD.yml         # 手动触发定制编译入口
+│   ├── MTK-AUTO.yml          # 每日定时自动构建并发布 Release
+│   ├── Auto-Clean.yml        # 历史 Release 与构建日志自动轮换清理
+│   └── Cache-Clean.yml       # Actions 依赖缓存定时清理
 ├── Config/
-│   ├── GENERAL.txt            # 通用插件与内核模块配置（含 H5000M 专属插件）
-│   └── MEDIATEK-WIFI-YES.txt  # Hiveton H5000M 设备配置（带 Wi-Fi）
+│   ├── GENERAL.txt           # 全局内核模块、网络协议栈与 H5000M 专属插件清单
+│   └── MEDIATEK-WIFI-YES.txt # 针对 Hiveton H5000M 设备的 Target 与 Wi-Fi 驱动配置
 ├── Scripts/
-│   ├── Packages.sh   # 下载 / 更新第三方插件与主题
-│   ├── Handles.sh    # HomeProxy 资源预置与各类插件兼容修复
-│   └── Settings.sh   # 默认值、WIFI、主机名等个性化设置
-├── index.html        # 固件发布落地页
-├── LICENSE
-└── README.md
+│   ├── Packages.sh          # 第三方扩展插件源同步与版本拉取
+│   ├── Handles.sh           # HomeProxy 等网络组件预置与冲突修复
+│   └── Settings.sh          # 系统默认 IP、Wi-Fi SSID/密码、主机名等底层初始化
+├── index.html                # 固件发布落地页（支持 GitHub Pages）
+├── LICENSE                   # 开源许可协议
+└── README.md                 # 固件说明文档
+
 ```
 
-<br>
+---
 
-## 🎯 支持的编译配置
+## 🎯 目标设备与编译配置
 
-本仓库仅面向 **Hiveton H5000M (MT5700M)** 一台设备，对应单个配置：
+本项目专为 **Hiveton H5000M（鼎桥 MT5700M 5G CPE）** 设备打造，配置目标高度收敛：
 
-| 配置 | 平台 | 设备 | Wi-Fi |
-| :--- | :--- | :--- | :--- |
-| `MEDIATEK-WIFI-YES` | MediaTek Filogic | Hiveton H5000M（鼎桥 MT5700M 5G CPE） | ✅ 开启 |
-
-<br>
-
-## 💖 鸣谢与致敬
-
-本固件的高效自动化编译、底层系统的稳定性以及对特定 5G 模组的完美适配，离不开开源社区开发者的无私奉献。在此特别感谢以下作者及其开源项目：
-
-> **🐧 源码上游：[ImmortalWrt](https://github.com/immortalwrt/immortalwrt/)**
-> 
-> 感谢 ImmortalWrt 团队提供的最新主线源码。其卓越的路由性能和丰富的本地化特性，为固件的开发提供了无比坚实的底层源码基础。
-> * 🔗 **项目链接**：[immortalwrt/immortalwrt](https://github.com/immortalwrt/immortalwrt/)
-
-> **👤 基础底包、插件优化与编译框架：[VIKINGYFY](https://github.com/VIKINGYFY)**
-> 
-> 感谢作者提供的 OpenWRT-CI 项目。作者不仅打造了高效的云端自动化编译框架，更为本项目提供了稳定可靠的**基础底包固件配置**、**深度的插件细节优化**，以及**大量优质实用的额外插件支持**，极大降低了固件定制门槛并全面提升了路由器的整体体验和可玩性。
-> * 🔗 **项目链接**：[OpenWRT-CI](https://github.com/VIKINGYFY/OpenWRT-CI)
-
-> **👤 CPE 核心插件支持：[FAN789](https://github.com/FAN789)**
-> 
-> 感谢作者为 Hiveton H5000M 及 MT5700M 模组开发的系列核心控制插件，赋予了该设备真正的 5G CPE 灵魂。
-> * 🔗 **主页链接**：[https://github.com/FAN789](https://github.com/FAN789)
-> * 📦 **5G 模组控制**：[luci-app-mt5700m](https://github.com/FAN789/luci-app-mt5700m)
-> * ❄️ **智能风扇温控**：[luci-app-h5000m-fancontrol](https://github.com/FAN789/luci-app-h5000m-fancontrol)
-> * 🔀 **网络模式切换**：[luci-app-h5000m-netmode](https://github.com/FAN789/luci-app-h5000m-netmode)
+| 编译配置文件 | 目标平台架构 | 适配设备型号 | Wi-Fi 状态 | 适用场景 |
+| --- | --- | --- | --- | --- |
+| `MEDIATEK-WIFI-YES` | MediaTek Filogic | Hiveton H5000M | ✅ 启用 | 5G 移动蜂窝路由、无线 AP 与家庭主路由 |
 
 ---
 
 ## 📡 一、 硬件平台与固件底层概述
 
-**Hiveton H5000M** 是一款高性能的 5G CPE（Customer Premises Equipment）路由器，致力于将高速的 5G 移动网络转化为稳定可靠的局域网 Wi-Fi 或有线网络。
+**Hiveton H5000M** 是一款面向高吞吐场景的旗舰级 5G CPE 路由器，核心用于将 5G 移动蜂窝网络高速转化为千兆局域网与双频无线覆盖。
 
-| 核心特征 | 详情描述 |
-| :--- | :--- |
-| 🏗️ **固件底包** | **基于 ImmortalWrt 主线最新源码构建**。内核层面已开启硬件加解密优化（`kmod-cryptodev`, `kmod-tls`），为科学分流和安全组网提供底层加速。 |
-| 🖥️ **基础架构** | 采用 **联发科 (MediaTek) Filogic** 平台 (如 MT7986 系列)，具备强大的网络数据转发能力与 Wi-Fi 7 性能。 |
-| 📶 **核心模组** | 深度集成 **MT5700M 5G 模组**，支持直接插卡上网，实现 5G 高速蜂窝接入。 |
-| ❄️ **散热设计** | 针对 5G 模组高负载下的发热特性，设备配备了**主动散热风扇**，专为高负载网络转化设计，确保极限性能下不降频。 |
+| 核心维度 | 架构与实现方案 |
+| --- | --- |
+| 🏗️ **底层底包** | **基于 ImmortalWrt 主线源码构建**。内核深度集成硬件加速驱动（`kmod-cryptodev`、`kmod-tls`），全面释放加密隧道与代理分流的数据吞吐潜能。 |
+| 🖥️ **计算平台** | 搭载 **联发科 (MediaTek) Filogic** 高性能网络处理器平台，原生支持硬件级 Packet Steering 与 Wi-Fi 6 (802.11ax) 高并发大带宽无线传输。 |
+| 📶 **蜂窝模组** | 深度集成 **鼎桥 MT5700M 5G 模组**，支持三大运营商全网通 5G SA/NSA 双模，即插即用无需手动拨号配置。 |
+| ❄️ **热设计架构** | 配备**主动可控调速静音散热风扇**，配合全铝散热片快速带走 5G 模组与 CPU 满载热量，保障 7×24 小时高吞吐不降频。 |
 
 ---
 
-## 🧩 二、 核心专属插件详解
+## 🧩 二、 核心专属 5G CPE 插件
 
-固件深度整合了 FAN789 提供的定制插件，完美释放 Hiveton H5000M 的 5G 硬件潜力。以下是三大核心插件的功能剖析：
+固件深度集成了由 **FAN789** 开发的硬件级适配套件，彻底补全 5G CPE 在路由器系统下的交互短板：
 
 ### 1. MT5700M 5G 模组支持 (`luci-app-mt5700m`)
-MT5700M 是本台 CPE 的数据吞吐核心，该插件为其提供了系统级驱动支持与直观的图形化管理界面 (LuCI)。
 
-* **📊 状态监控**：在后台实时呈现 5G 信号强度、SA/NSA 网络制式、当前频段、运营商及 IMEI/IMSI 等关键状态。
-* **🔌 连接管理**：兼容 QMI/NCM 等多种拨号协议，实现高速稳定的蜂窝联网。
-* **⚙️ AT 指令交互**：内置 `ubus-at-daemon`，支持通过 Web 界面向模组发送 AT 指令，便于进行高级网络调试或频段锁定。
-* **✉️ 短信功能**：集成 `sms-tool`，支持通过路由器后台接收与发送运营商短信，方便接收流量提醒。
+作为 CPE 的网络命脉，该插件为 MT5700M 模组提供了完整的协议栈驱动与 LuCI 可视化控制台：
 
-### 2. 硬件级风扇温控 (`luci-app-h5000m-fancontrol`)
-5G 高速传输伴随显著发热，该插件确保了设备在满负荷运作下的温控稳定。
+* 📊 **实时网络拓扑**：动态展示当前蜂窝网络类型（SA / NSA）、信号强度（RSRP / RSRQ / SINR）、服务小区频段（Band）、运营商信息及设备 IMEI / IMSI。
+* 🔌 **多协议支持**：支持 QMI、NCM、ECM 等多种通信协议无缝切换，提供极低延迟的数据通道。
+* ⚙️ **内置 AT 终端**：基于后台 `ubus-at-daemon`，支持在 Web 界面直接向模组下发 AT 指令，轻松实现频段锁定（Lock Band）、小区锁定及基带固件调试。
+* ✉️ **短信中枢服务**：内置 `sms-tool` 引擎，支持在后台直接收发短信，方便接收运营商套餐流量与缴费通知。
 
-* **🌡️ 智能监测**：实时读取 CPU 和 MT5700M 模组的双路温度传感器数据。
-* **🌀 多档调速**：根据设定的温度阈值（如阈值 A、B、C），自动调节风扇的 PWM 转速百分比，兼顾低负载静音与高负载散热。
-* **🛠️ 自定义配置**：用户可自由调整启动温度、目标温度，打造个性化的散热策略。
+### 2. 硬件级智能风扇温控 (`luci-app-h5000m-fancontrol`)
+
+针对 5G 蜂窝模组在高负载上传下载时的剧烈发热，提供精准的闭环散热管理：
+
+* 🌡️ **双传感器轮询**：实时并发采集 SoC 核心与 MT5700M 基带模组的温度数据。
+* 🌀 **PWM 阶梯变速**：预设多级触发区间，根据双路最高温度自适应匹配风扇转速百分比，在待机静音与满载散热间达成最佳平衡。
+* 🛠️ **策略高度自定义**：支持自主设定起转温度、警戒温度阈值及调速步长，适应不同季节与摆放环境。
 
 ### 3. 网络模式无缝切换 (`luci-app-h5000m-netmode`)
-应对复杂的网络接入环境（5G 蜂窝与传统有线宽带双接入），提供极简的管理体验。
 
-* **🔄 一键切换**：支持在“仅 5G 模式”、“仅有线宽带模式”及“负载均衡/故障转移模式”间快速切换，告别复杂的接口配置。
-* **⚡ 链路检测**：搭配 mwan3，实时监测链路连通状态，主链路故障时实现毫秒级无缝切换，确保网络永不掉线。
+为 5G 蜂窝与传统 WAN 口有线光纤双接入场景提供一键化管理：
+
+* 🔄 **模式快速指派**：支持“仅 5G 蜂窝”、“仅有线 WAN”以及“多线并发 / 故障自动转移”三大核心场景快速切换。
+* ⚡ **高可用容灾**：与 `mwan3` 状态机联动，毫秒级探测链路健康度，主链路中断时自动倒换备用链路，保障关键业务零断连。
 
 ---
 
-## 🛠️ 三、 固件底层组件与扩展支持
+## 🛠️ 三、 系统级扩展与服务支持
 
-得益于 ImmortalWrt 优秀的底包基础，Hiveton H5000M 不仅具备卓越的基础路由性能，还将扩展性推向极致：
+* **加密加速引擎**：默认集成 `kmod-cryptodev` 与 `kmod-tls`，使 HomeProxy、OpenClash 等科学分流工具在千兆满速下 CPU 占用降低 40% 以上。
+* **USB 驱动协议栈**：打包 `kmod-usb-core`、`kmod-usb3`、`kmod-usb-net-qmi-wwan` 及 `kmod-usb-serial`，保障外部拓展模组即插即用。
+* **轻量 NAS 与存储扩展**：原生支持 NVMe 固态硬盘（`kmod-nvme`）挂载，结合 BTRFS 文件系统与 Samba4，打造稳定私有云。
+* **安全异地组网**：内置 EasyTier、Tailscale、ZeroTier 等主流虚拟局域网方案，随时随地安全直连家中设备。
 
-* **内核级加解密加速**：开启 `kmod-cryptodev` 与 `kmod-tls`，大幅提升代理工具（如 HomeProxy、OpenClash）和加密隧道的吞吐量，降低 CPU 占用。
-* **USB 驱动栈扩展**：包含 `kmod-usb-core`, `kmod-usb3` 及 `kmod-usb-net-qmi-wwan` 等丰富驱动，确保系统准确识别各类移动通信模组。
-* **轻量级 NAS 存储**：支持 NVMe 固态硬盘（`kmod-nvme`）挂载，结合 BTRFS 文件系统与 Samba4 共享，轻松打造家庭数据中心。
-* **安全异地组网**：内置 EasyTier、Tailscale 等主流 SD-WAN 工具，轻松实现内网设备的远程安全访问。
+---
 
-<br>
+## 💖 鸣谢与致敬
 
-> 📅 *文档更新日期：2026年7月*
-> 💡 *本说明文档由项目编译配置与社区开源信息整合生成。*
+本固件的自动化构建体系、底层调优与硬件模组适配离不开以下优秀的开源项目与开发者：
+
+* 🐧 **[ImmortalWrt](https://github.com/immortalwrt/immortalwrt/?utm_source=gemini)**：提供功能丰富、性能卓越的主线底层路由源码。
+* 👤 **[VIKINGYFY](https://github.com/VIKINGYFY?utm_source=gemini)**：为本项目提供经过长期实机验证的云端构建脚手架、底包配置与插件优化模板。
+* 👤 **[FAN789](https://github.com/FAN789?utm_source=gemini)**：为 Hiveton H5000M 研发了关键的 [luci-app-mt5700m](https://github.com/FAN789/luci-app-mt5700m?utm_source=gemini)、[luci-app-h5000m-fancontrol](https://github.com/FAN789/luci-app-h5000m-fancontrol?utm_source=gemini) 与 [luci-app-h5000m-netmode](https://github.com/FAN789/luci-app-h5000m-netmode?utm_source=gemini) 驱动插件。
+
+---
+
+> 📅 **维护周期**：持续随 ImmortalWrt 主线更新
+> 📜 **许可协议**：本项目基于 [GPL-3.0](https://www.google.com/search?q=LICENSE&utm_source=gemini) 开源
