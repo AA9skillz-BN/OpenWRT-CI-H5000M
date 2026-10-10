@@ -15,9 +15,7 @@ CONFIG_PACKAGE_easytier=y
 CONFIG_PACKAGE_luci-app-easytier=y
 
 # MT5700M 依赖组件
-CONFIG_PACKAGE_ubus-at-daemon=y
 CONFIG_PACKAGE_sms-tool=y
-CONFIG_PACKAGE_sms-tool_q=y
 
 # USB 核心支持
 CONFIG_PACKAGE_kmod-usb2=y
