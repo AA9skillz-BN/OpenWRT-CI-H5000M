@@ -2,6 +2,39 @@
 
 本仓库的所有重要变更都会记录在此文件中。
 
+## [2026-10-17] 修复全平台编译中断：移除 immortalwrt/packages 中过时的 miniupnpd 补丁
+
+### 背景
+
+10-17 凌晨的 MTK-AUTO（run 38979810271，MEDIATEK-WIFI-YES 变体）在
+「Compile Firmware」步骤失败，前一日（10-16 合并前）构建正常。
+
+### 根因
+
+immortalwrt/packages 于 2026-10-16 03:02 UTC 执行「Merge Official Source」（dd29469e22），
+将 openwrt/packages 上游 10-07 的 miniupnpd 2.3.11 升级合入。feed 自带的
+`net/miniupnpd/patches/020-descr-filter-fix.patch`（权限行解析器重写）基于 2.3.9
+编写，2.3.11 的 `upnppermissions.c/h` 已发生变动，导致 7 个 hunk 中 5 个
+apply 失败、prepare 阶段即中断，miniupnpd(nftables) 编译失败并级联到
+`make world` 退出。
+
+经比对 miniupnpd 2.3.11 官方源码确认：该补丁的全部改动（`get_sep`/`get_ushort`/
+`get_range`/`iseol` 解析器重写、`read_permission_line` 的 `const char *` 签名）
+均已被上游吸收，补丁完全过时，删除无功能损失。与 H5000M-CI-Qmodem 同日
+修复（commit 4e881f7）为同一问题。
+
+### 修复
+
+- `.github/workflows/WRT-CORE.yml`：Update Feeds 步骤后增加 workaround，
+  若存在 `feeds/packages/net/miniupnpd/patches/020-descr-filter-fix.patch`
+  则删除之。MTK-AUTO / WRT-BUILD 均复用 WRT-CORE，一处修复全覆盖。
+  上游刷新补丁后可移除该 workaround。
+
+### 验证
+
+推送后手动 workflow_dispatch 触发 MTK-AUTO，观察 Compile Firmware 步骤
+通过、固件产物生成。
+
 ## [2026-10-10]
 
 ### 变更
