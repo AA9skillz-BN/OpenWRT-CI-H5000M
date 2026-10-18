@@ -19,6 +19,7 @@
   `BRANCH` 改为 `owrt`，并同步更新分支选择说明（VIKINGYFY 用 owrt，immortalwrt 用 master）；
   官方 `immortalwrt/immortalwrt` 仍保留为可选源码，便于随时回退。
 - `index.html`：落地页“固件源码”徽章与规格卡同步更新为 VIKINGYFY/immortalwrt@owrt。
+- `README.md`：标题、ImmortalWrt 徽章、底层底包与维护周期中的构建源码表述同步更新为 VIKINGYFY/immortalwrt@owrt。
 - 打包产物命名随之变化：`WRT_INFO`=VIKINGYFY、Release Tag 携带 `-owrt-` 后缀，
   与既有“按变体清晰区分”策略一致。
 - packages feed 仍为 `VIKINGYFY/packages@main`（独立仓库，本次未改动），与源码同源。

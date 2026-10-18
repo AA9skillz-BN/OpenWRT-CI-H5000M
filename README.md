@@ -2,9 +2,9 @@
 
 # 🚀 Hiveton H5000M (MT5700M) 定制固件说明书
 
-**基于 ImmortalWrt 主线源码 · 专为联发科 Filogic 平台 5G CPE 打造的高性能全功能固件**
+**基于 ImmortalWrt 主线（VIKINGYFY/immortalwrt @ owrt）源码 · 专为联发科 Filogic 平台 5G CPE 打造的高性能全功能固件**
 
-[![ImmortalWrt](https://img.shields.io/badge/ImmortalWrt-Mainline-00A0D0.svg?logo=openwrt&logoColor=white&style=flat-square)](https://github.com/immortalwrt/immortalwrt)
+[![ImmortalWrt](https://img.shields.io/badge/ImmortalWrt-VIKINGYFY%2Fowrt-00A0D0.svg?logo=openwrt&logoColor=white&style=flat-square)](https://github.com/VIKINGYFY/immortalwrt)
 [![Platform](https://img.shields.io/badge/Platform-MediaTek%20Filogic-FF6B35.svg?style=flat-square)](#-一-硬件平台与固件底层概述)
 [![Device](https://img.shields.io/badge/Device-Hiveton%20H5000M-blue.svg?style=flat-square)](#-目标设备与编译配置)
 [![Modem](https://img.shields.io/badge/Modem-MT5700M%205G-success.svg?style=flat-square)](#1-mt5700m-5g-模组支持-luci-app-mt5700m)
@@ -83,7 +83,7 @@ OpenWRT-CI-H5000M/
 
 | 核心维度 | 架构与实现方案 |
 | --- | --- |
-| 🏗️ **底层底包** | **基于 ImmortalWrt 主线源码构建**。内核深度集成硬件加速驱动（`kmod-cryptodev`、`kmod-tls`），全面释放加密隧道与代理分流的数据吞吐潜能。 |
+| 🏗️ **底层底包** | **基于 ImmortalWrt 主线（VIKINGYFY/immortalwrt @ owrt）源码构建**。内核深度集成硬件加速驱动（`kmod-cryptodev`、`kmod-tls`），全面释放加密隧道与代理分流的数据吞吐潜能。 |
 | 🖥️ **计算平台** | 搭载 **联发科 (MediaTek) Filogic** 高性能网络处理器平台，原生支持硬件级 Packet Steering 与 Wi-Fi 6 (802.11ax) 高并发大带宽无线传输。 |
 | 📶 **蜂窝模组** | 深度集成 **鼎桥 MT5700M 5G 模组**，支持三大运营商全网通 5G SA/NSA 双模，即插即用无需手动拨号配置。 |
 | ❄️ **热设计架构** | 配备**主动可控调速静音散热风扇**，配合全铝散热片快速带走 5G 模组与 CPU 满载热量，保障 7×24 小时高吞吐不降频。 |
@@ -139,5 +139,5 @@ OpenWRT-CI-H5000M/
 
 ---
 
-> 📅 **维护周期**：持续随 ImmortalWrt 主线更新
+> 📅 **维护周期**：持续随 ImmortalWrt 主线（VIKINGYFY/immortalwrt @ owrt）更新
 > 📜 **许可协议**：本项目基于 [GPL-3.0](https://www.google.com/search?q=LICENSE&utm_source=gemini) 开源
