@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hiveton H5000M 5G CPE 定制固件 | 基于 ImmortalWrt & MediaTek Filogic</title>
+    <meta name="description" content="专为联发科 Filogic 平台与鼎桥 MT5700M 5G CPE 路由器打造的高性能全功能定制固件，基于 ImmortalWrt 主线源码构建，支持 GitHub Actions 全自动云端构建。">
+    <meta name="keywords" content="OpenWRT, ImmortalWrt, Hiveton H5000M, MT5700M, 5G CPE, Filogic, 联发科, 锁频, 智能温控, GitHub Actions, 固件下载">
+    <meta property="og:title" content="Hiveton H5000M 5G CPE 定制固件">
+    <meta property="og:description" content="基于 ImmortalWrt 主线，集成 MT5700M 模组驱动、双温感智能风扇温控与网络双链路无缝切换。">
+    <meta property="og:image" content="https://files.seeusercontent.com/2026/06/29/uu4H/bg1.jpg">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    },
+                    boxShadow: {
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.08)',
+                        'glass-hover': '0 14px 40px 0 rgba(31, 38, 135, 0.15)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* 全局背景壁纸：使用用户指定原图，不压缩 */
+        body {
+            background-color: #f8fafc;
+            background-image: url('https://files.seeusercontent.com/2026/06/29/uu4H/bg1.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            min-height: 100vh;
+            color: #1e293b;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 主体纯净白色卡片与毛玻璃层 */
+        .glass-card-white {
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.06), 0 4px 6px -2px rgba(15, 23, 42, 0.03);
+        }
+
+        .glass-card-light {
+            background: rgba(255, 255, 255, 0.86);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.05);
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        /* 渐变标题 */
+        .gradient-text-blue {
+            background: linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #4f46e5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* 隐藏滚动条但保留功能 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* 动画发光点 */
+        @keyframes pulse-dot {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.4); opacity: 0.6; }
+        }
+        .animate-pulse-dot {
+            animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen relative selection:bg-sky-500 selection:text-white">
+
+    <!-- 顶部固定导航栏 -->
+    <header class="sticky top-0 z-50 glass-nav transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 md:h-20">
+                <!-- 品牌 Logo -->
+                <a href="#" class="flex items-center gap-3 group">
+                    <div class="w-10 h-10 md:w-11 md:h-11 rounded-2xl bg-gradient-to-tr from-sky-600 to-blue-600 flex items-center justify-center text-white shadow-md shadow-sky-500/20 group-hover:scale-105 transition-transform">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-extrabold text-lg md:text-xl tracking-tight text-slate-900">H5000M</span>
+                            <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-sky-100 text-sky-700 border border-sky-200">5G CPE</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 font-mono tracking-tight hidden sm:block">OpenWRT-CI · Filogic 平台</p>
+                    </div>
+                </a>
+
+                <!-- 桌面端导航菜单 -->
+                <nav class="hidden md:flex items-center gap-1 lg:gap-2">
+                    <a href="#features" class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-sky-600 hover:bg-slate-100/70 rounded-xl transition-colors">核心特性</a>
+                    <a href="#exclusive-plugins" class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-sky-600 hover:bg-slate-100/70 rounded-xl transition-colors">专属插件</a>
+                    <a href="#specs" class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-sky-600 hover:bg-slate-100/70 rounded-xl transition-colors">默认参数</a>
+                    <a href="#downloads" class="px-3 py-2 text-sm font-semibold text-sky-600 bg-sky-50 hover:bg-sky-100/80 rounded-xl transition-colors flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        固件下载
+                    </a>
+                    <a href="#guide" class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-sky-600 hover:bg-slate-100/70 rounded-xl transition-colors">刷机教程</a>
+                    <a href="#proxy-tool" class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-sky-600 hover:bg-slate-100/70 rounded-xl transition-colors flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse-dot"></span>
+                        加速服务
+                    </a>
+                </nav>
+
+                <!-- 快捷操作区 -->
+                <div class="hidden sm:flex items-center gap-3">
+                    <!-- ACG2 加速状态药丸 -->
+                    <a href="https://gh.acg2.mom/" target="_blank" rel="noopener noreferrer" 
+                       class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 border border-slate-200 text-xs font-medium transition-all group"
+                       title="点击前往 gh.acg2.mom 代理加速官网">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 group-hover:bg-sky-500"></span>
+                        <span>gh.acg2.mom</span>
+                        <svg class="w-3 h-3 text-slate-400 group-hover:text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                        </svg>
+                    </a>
+
+                    <!-- GitHub 仓库按钮 -->
+                    <a href="https://github.com/LianXia233/OpenWRT-CI-H5000M" target="_blank" rel="noopener noreferrer"
+                       class="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs md:text-sm font-semibold transition-all shadow-sm hover:shadow active:scale-95">
+                        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+                        </svg>
+                        <span>GitHub</span>
+                    </a>
+                </div>
+
+                <!-- 移动端汉堡菜单按钮 -->
+                <div class="flex md:hidden items-center gap-2">
+                    <button id="mobile-menu-btn" type="button" class="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none" aria-label="切换菜单">
+                        <svg id="menu-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                        <svg id="close-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 移动端下拉菜单面板 -->
+        <div id="mobile-menu" class="hidden md:hidden px-4 pt-2 pb-6 space-y-2 border-t border-slate-100 bg-white/95 backdrop-blur-xl">
+            <a href="#features" class="block px-4 py-2.5 rounded-xl text-base font-medium text-slate-700 hover:bg-slate-50 hover:text-sky-600">核心特性</a>
+            <a href="#exclusive-plugins" class="block px-4 py-2.5 rounded-xl text-base font-medium text-slate-700 hover:bg-slate-50 hover:text-sky-600">专属 5G 插件</a>
+            <a href="#specs" class="block px-4 py-2.5 rounded-xl text-base font-medium text-slate-700 hover:bg-slate-50 hover:text-sky-600">默认参数</a>
+            <a href="#downloads" class="block px-4 py-2.5 rounded-xl text-base font-bold text-sky-600 bg-sky-50">固件极速下载</a>
+            <a href="#guide" class="block px-4 py-2.5 rounded-xl text-base font-medium text-slate-700 hover:bg-slate-50 hover:text-sky-600">刷机指引</a>
+            <a href="#proxy-tool" class="block px-4 py-2.5 rounded-xl text-base font-medium text-slate-700 hover:bg-slate-50 hover:text-sky-600">GitHub 代理加速</a>
+            <div class="pt-3 flex flex-col gap-2">
+                <a href="https://github.com/LianXia233/OpenWRT-CI-H5000M" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center gap-2 py-3 bg-slate-900 text-white rounded-xl font-medium">
+                    访问 GitHub 仓库
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主容器 -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 w-full space-y-12 md:space-y-16">
+
+        <!-- HERO 头图区：主体纯白卡片 -->
+        <section class="glass-card-white rounded-3xl md:rounded-[2.5rem] p-6 sm:p-10 md:p-14 relative overflow-hidden">
+            <!-- 柔和背景装饰高光 -->
+            <div class="absolute -top-24 -right-24 w-96 h-96 bg-sky-200/40 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-200/30 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="relative z-10 max-w-3xl">
+                <!-- 顶部长胶囊标签 -->
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sky-50 border border-sky-200/80 text-sky-700 text-xs md:text-sm font-semibold mb-6 shadow-sm">
+                    <span class="flex h-2 w-2 relative">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
+                    </span>
+                    <span>基于 VIKINGYFY/immortalwrt @ owrt 主线源码</span>
+                    <span class="text-sky-300">|</span>
+                    <span class="text-slate-600">联发科 Filogic 5G 专属</span>
+                </div>
+
+                <!-- 大标题 -->
+                <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.15] mb-5">
+                    Hiveton H5000M <br class="hidden sm:inline">
+                    <span class="gradient-text-blue">全功能 5G CPE 定制固件</span>
+                </h1>
+
+                <!-- 详细副标题 -->
+                <p class="text-base sm:text-lg md:text-xl text-slate-600 leading-relaxed mb-8">
+                    专为 <strong class="text-slate-800 font-semibold">Hiveton H5000M（鼎桥 MT5700M 5G CPE）</strong> 深度打造的高性能路由固件。深度集成硬件级 MT5700M 蜂窝模组控制台、双温感智能风扇温控、双网热备无缝切换与硬件级加密加速，全自动化 GitHub Actions 每日云端构建。
+                </p>
+
+                <!-- 徽章组 -->
+                <div class="flex flex-wrap items-center gap-2.5 mb-9">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-mono font-medium border border-slate-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
+                        SoC: MediaTek Filogic
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-mono font-medium border border-emerald-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        Modem: MT5700M 5G SA/NSA
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-purple-50 text-purple-700 text-xs font-mono font-medium border border-purple-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                        Kernel: 6.6+ w/ CryptoDev
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-50 text-amber-700 text-xs font-mono font-medium border border-amber-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                        UI: Aurora 极简主题
+                    </span>
+                    <a href="https://github.com/LianXia233/OpenWRT-CI-H5000M/actions" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-medium border border-blue-200 hover:bg-blue-100 transition-colors">
+                        <img src="https://github.com/LianXia233/OpenWRT-CI-H5000M/actions/workflows/WRT-BUILD.yml/badge.svg" alt="CI Status" class="h-4">
+                    </a>
+                </div>
+
+                <!-- CTA 核心按钮组 -->
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+                    <a href="#downloads" class="inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-2xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white font-bold text-base shadow-lg shadow-sky-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        <span>获取最新固件</span>
+                    </a>
+
+                    <a href="#proxy-tool" class="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 font-bold text-base border border-slate-200 shadow-sm transition-all transform hover:-translate-y-0.5">
+                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        <span>ACG2 极速加速</span>
+                    </a>
+
+                    <a href="https://github.com/LianXia233/OpenWRT-CI-H5000M" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition-all">
+                        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+                        <span>GitHub Source</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 默认配置与快速登入参数卡片 (白色大卡片) -->
+        <section id="specs" class="glass-card-white rounded-3xl p-6 sm:p-8 md:p-10">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-100">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2.5">
+                        <span class="p-2 rounded-xl bg-sky-100 text-sky-600">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        </span>
+                        <span>系统初始化默认配置与凭据</span>
+                    </h2>
+                    <p class="text-sm text-slate-500 mt-1">刷入固件初次启动后的网络与后台登录信息（源自 Settings.sh 初始化）</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        开箱即用 · 零配置连网
+                    </span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- IP 地址 -->
+                <div class="p-5 rounded-2xl bg-slate-50/80 border border-slate-200/70 hover:border-sky-300 transition-all group">
+                    <div class="flex items-center justify-between text-xs font-semibold text-slate-500 mb-2">
+                        <span>后台管理地址 (IP)</span>
+                        <button onclick="copyText('192.168.10.1', '已复制管理地址')" class="text-sky-600 hover:text-sky-700 text-xs font-bold flex items-center gap-1 group-hover:scale-105">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                            复制
+                        </button>
+                    </div>
+                    <div class="text-xl font-mono font-black text-slate-900 tracking-tight flex items-center justify-between">
+                        <span>192.168.10.1</span>
+                        <a href="http://192.168.10.1" target="_blank" class="text-xs font-sans text-sky-600 hover:underline">访问 ↗</a>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1.5 font-mono">http://192.168.10.1</p>
+                </div>
+
+                <!-- 登录用户名与密码 -->
+                <div class="p-5 rounded-2xl bg-slate-50/80 border border-slate-200/70 hover:border-sky-300 transition-all group">
+                    <div class="flex items-center justify-between text-xs font-semibold text-slate-500 mb-2">
+                        <span>管理员账号 / 密码</span>
+                        <button onclick="copyText('root', '已复制用户名 root')" class="text-sky-600 hover:text-sky-700 text-xs font-bold flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                            复制账号
+                        </button>
+                    </div>
+                    <div class="text-xl font-mono font-black text-slate-900 tracking-tight">
+                        root <span class="text-sm font-normal text-slate-500 font-sans">/ 无密码</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1.5 font-medium">首次登录直接按回车进入后台</p>
+                </div>
+
+                <!-- 默认 Wi-Fi -->
+                <div class="p-5 rounded-2xl bg-slate-50/80 border border-slate-200/70 hover:border-sky-300 transition-all group">
+                    <div class="flex items-center justify-between text-xs font-semibold text-slate-500 mb-2">
+                        <span>默认 Wi-Fi SSID / 密码</span>
+                        <button onclick="copyText('12345678', '已复制 Wi-Fi 密码')" class="text-sky-600 hover:text-sky-700 text-xs font-bold flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                            复制密码
+                        </button>
+                    </div>
+                    <div class="text-xl font-mono font-black text-slate-900 tracking-tight">
+                        OWRT <span class="text-sm font-mono text-slate-600 font-normal">/ 12345678</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1.5">双频 2.4G & 5G 802.11ax Wi-Fi 6</p>
+                </div>
+
+                <!-- Web 终端与管理 -->
+                <div class="p-5 rounded-2xl bg-slate-50/80 border border-slate-200/70 hover:border-sky-300 transition-all">
+                    <div class="flex items-center justify-between text-xs font-semibold text-slate-500 mb-2">
+                        <span>内置 Web 终端 / 主机名</span>
+                        <span class="px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 text-[10px] font-bold">免 SSH</span>
+                    </div>
+                    <div class="text-xl font-mono font-black text-slate-900 tracking-tight">
+                        TTYD <span class="text-sm font-sans font-normal text-slate-500">(OWRT)</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1.5">进入系统菜单直接开启网页控制台</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 核心四大架构亮点 -->
+        <section id="features" class="space-y-6">
+            <div class="text-center max-w-2xl mx-auto">
+                <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">为旗舰 5G CPE 打造的卓越性能</h2>
+                <p class="text-slate-600 mt-2 text-sm sm:text-base">告别发热断流与性能短板，软硬件协同全面释放联发科 Filogic 潜力</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                <!-- 亮点 1 -->
+                <div class="glass-card-white rounded-3xl p-6 hover:-translate-y-1 transition-all duration-300">
+                    <div class="w-12 h-12 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center mb-5 font-bold">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-black text-slate-900 mb-2">5G 蜂窝全网通</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed">
+                        深度适配鼎桥 MT5700M 模组，原生支持 5G SA/NSA 双模全网通。支持 QMI/NCM 高速通信协议，内置 AT 指令终端与短信收发中枢。
+                    </p>
+                </div>
+
+                <!-- 亮点 2 -->
+                <div class="glass-card-white rounded-3xl p-6 hover:-translate-y-1 transition-all duration-300">
+                    <div class="w-12 h-12 rounded-2xl bg-teal-100 text-teal-600 flex items-center justify-center mb-5 font-bold">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-black text-slate-900 mb-2">智能风扇温控</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed">
+                        硬件级双传感器实时轮询（SoC 核心 + 5G 基带模组），PWM 阶梯无级自动调速，支持自定义起转温度阈值，静音与长效散热平衡兼得。
+                    </p>
+                </div>
+
+                <!-- 亮点 3 -->
+                <div class="glass-card-white rounded-3xl p-6 hover:-translate-y-1 transition-all duration-300">
+                    <div class="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center mb-5 font-bold">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-black text-slate-900 mb-2">双链路无缝倒换</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed">
+                        一键切换“仅 5G 蜂窝”、“仅千兆 WAN”与“多线并发负载均衡”。与 mwan3 深度联动，毫秒级链路探测与故障倒换，业务零掉线。
+                    </p>
+                </div>
+
+                <!-- 亮点 4 -->
+                <div class="glass-card-white rounded-3xl p-6 hover:-translate-y-1 transition-all duration-300">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mb-5 font-bold">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-black text-slate-900 mb-2">硬件加密加速</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed">
+                        内核集成 <code class="text-amber-800 font-mono text-xs">kmod-cryptodev</code> 与 <code class="text-amber-800 font-mono text-xs">kmod-tls</code>，科学分流千兆满速下 CPU 占用暴降 40% 以上，流媒体体验丝滑。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 三大核心专属 5G CPE 插件 (详细交互卡片) -->
+        <section id="exclusive-plugins" class="glass-card-white rounded-3xl p-6 sm:p-8 md:p-12 space-y-8">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <span class="text-sky-600 text-xs sm:text-sm font-bold tracking-wider uppercase">FAN789 硬件套件深度适配</span>
+                    <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-1">专属 5G CPE 硬件插件套件</h2>
+                    <p class="text-slate-600 text-sm mt-1">彻底补齐 5G CPE 在标准 OpenWRT 上的驱动与可视化交互短板</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-mono">luci-app-*</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 插件 1: luci-app-mt5700m -->
+                <div class="rounded-3xl p-6 bg-slate-50/90 border border-slate-200/80 hover:border-sky-400 hover:shadow-lg transition-all flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-2.5 py-1 rounded-lg bg-sky-100 text-sky-700 text-xs font-bold font-mono">luci-app-mt5700m</span>
+                            <span class="text-xs font-semibold text-emerald-600 flex items-center gap-1">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> 中文控制台
+                            </span>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">MT5700M 5G 模组管理</h3>
+                        <p class="text-xs text-slate-500 mb-4 leading-relaxed">CPE 网络命脉核心驱动与 LuCI 可视化控制台</p>
+                        
+                        <ul class="space-y-2.5 text-xs text-slate-700">
+                            <li class="flex items-start gap-2">
+                                <span class="text-sky-500 font-bold">✓</span>
+                                <span><strong>实时拓扑大屏</strong>：动态显示 SA/NSA 状态、频段 Band、RSRP / RSRQ / SINR 信号指标、运营商与基站信息</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-sky-500 font-bold">✓</span>
+                                <span><strong>多协议无缝切换</strong>：QMI、NCM、ECM 极速驱动切换，免去繁琐手动拨号</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-sky-500 font-bold">✓</span>
+                                <span><strong>内置 Web AT 控制台</strong>：Web 页面下发 AT 指令，一键锁频（Lock Band）、锁小区与基带调试</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-sky-500 font-bold">✓</span>
+                                <span><strong>短信中枢服务</strong>：网页直观收发短信，方便接收运营商套餐扣费与流量通知</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-200/60 flex items-center justify-between text-xs text-slate-500">
+                        <span>驱动作者：FAN789</span>
+                        <span class="text-sky-600 font-medium">即插即用 · 全网通</span>
+                    </div>
+                </div>
+
+                <!-- 插件 2: luci-app-h5000m-fancontrol -->
+                <div class="rounded-3xl p-6 bg-slate-50/90 border border-slate-200/80 hover:border-teal-400 hover:shadow-lg transition-all flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-2.5 py-1 rounded-lg bg-teal-100 text-teal-700 text-xs font-bold font-mono">luci-app-h5000m-fancontrol</span>
+                            <span class="text-xs font-semibold text-teal-600 flex items-center gap-1">
+                                <span class="w-2 h-2 rounded-full bg-teal-500"></span> 硬件级 PWM
+                            </span>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">智能风扇闭环温控</h3>
+                        <p class="text-xs text-slate-500 mb-4 leading-relaxed">解决 5G 高负载大带宽发热，7x24 小时满速不降频</p>
+                        
+                        <ul class="space-y-2.5 text-xs text-slate-700">
+                            <li class="flex items-start gap-2">
+                                <span class="text-teal-500 font-bold">✓</span>
+                                <span><strong>双传感器轮询</strong>：实时并发采集 Filogic SoC 核心与 MT5700M 5G 模组两路精准温度</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-teal-500 font-bold">✓</span>
+                                <span><strong>自适应阶梯变速</strong>：基于双路最高温自适应调节转速，低温静音、高温速冷</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-teal-500 font-bold">✓</span>
+                                <span><strong>温控策略全自定义</strong>：可自主设置起转阈值、警报阈值与转速步长，适应四季温差</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-teal-500 font-bold">✓</span>
+                                <span><strong>寿命保护算法</strong>：防频繁起停抖动，延长物理风扇轴承寿命</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-200/60 flex items-center justify-between text-xs text-slate-500">
+                        <span>PWM 调速控制</span>
+                        <span class="text-teal-600 font-medium">静音散热平衡</span>
+                    </div>
+                </div>
+
+                <!-- 插件 3: luci-app-h5000m-netmode -->
+                <div class="rounded-3xl p-6 bg-slate-50/90 border border-slate-200/80 hover:border-indigo-400 hover:shadow-lg transition-all flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-bold font-mono">luci-app-h5000m-netmode</span>
+                            <span class="text-xs font-semibold text-indigo-600 flex items-center gap-1">
+                                <span class="w-2 h-2 rounded-full bg-indigo-500"></span> mwan3 联动
+                            </span>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">网络模式无缝切换</h3>
+                        <p class="text-xs text-slate-500 mb-4 leading-relaxed">5G 蜂窝移动网络与千兆 WAN 口光纤双网融合</p>
+                        
+                        <ul class="space-y-2.5 text-xs text-slate-700">
+                            <li class="flex items-start gap-2">
+                                <span class="text-indigo-500 font-bold">✓</span>
+                                <span><strong>三大场景一键指派</strong>：“仅 5G 移动蜂窝”、“仅千兆有线 WAN”、“多线并发分流”快速切换</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-indigo-500 font-bold">✓</span>
+                                <span><strong>毫秒级链路探测</strong>：实时监控主备网络延迟与连通性，自动识别异常断流</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-indigo-500 font-bold">✓</span>
+                                <span><strong>高可用自动容灾</strong>：主链路掉线瞬间倒换备用链路，网络恢复后自适应切回，企业/直播利器</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-indigo-500 font-bold">✓</span>
+                                <span><strong>流量与负载均衡</strong>：针对特定 IP 或服务灵活分流，榨干每兆带宽</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-200/60 flex items-center justify-between text-xs text-slate-500">
+                        <span>双链路灾备</span>
+                        <span class="text-indigo-600 font-medium">毫秒级倒换</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 系统内置丰富功能矩阵 -->
+        <section class="glass-card-white rounded-3xl p-6 sm:p-8 md:p-12 space-y-6">
+            <div>
+                <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">固件预置扩展功能清单</h2>
+                <p class="text-slate-600 text-sm mt-1">涵盖科学代理分流、安全异地组网、高速轻 NAS 与日常自动化维护</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+                <!-- 模块 1: 代理与加速 -->
+                <div class="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/60">
+                    <div class="flex items-center gap-2 mb-3 text-sky-600 font-bold">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <h4 class="text-sm font-black text-slate-800">网络分流与硬件加速</h4>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                        <span class="px-2 py-1 rounded bg-white text-slate-700 text-xs border border-slate-200 font-mono">HomeProxy</span>
+                        <span class="px-2 py-1 rounded bg-white text-slate-700 text-xs border border-slate-200 font-mono">OpenClash</span>
+                        <span class="px-2 py-1 rounded bg-white text-slate-700 text-xs border border-slate-200 font-mono">PassWall</span>
+                        <span class="px-2 py-1 rounded bg-white text-slate-700 text-xs border border-slate-200 font-mono">Nikki</span>
+                        <span class="px-2 py-1 rounded bg-white text-slate-700 text-xs border border-slate-200 font-mono">Momo</span>
+                        <span class="px-2 py-1 rounded bg-sky-100 text-sky-800 text-xs border border-sky-200 font-mono">kmod-cryptodev</span>
+                        <span class="px-2 py-1 rounded bg-sky-100 text-sky-800 text-xs border border-sky-200 font-mono">kmod-tls</span>
+                    </div>
+                </div>
+
+                <!-- 模块 2: 异地组网互联 -->
+                <div class="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/60">
+                    <div class="flex items-center gap-2 mb-3 text-emerald-600 font-bold">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        <h4 class="text-sm font-black text-slate-800">异地组网与虚拟局域网</h4>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                        <span class="px-2 py-1 rounded bg-white text-slate-700 text-xs border border-slate-200 font-mono">EasyTier</span>
+                        <span class="px-2 py-1 rounded bg-white text-slate-700 text-xs border border-slate-200 font-mono">Tailscale</span>
+                        <span class="px-2 py-1 rounded bg-white text-slate-700 text-xs border border-slate-200 font-mono">ZeroTier</span>
+                        <span class="px-2 py-1 rounded bg-white text-slate-700 text-xs border border-slate-200 font-mono">WireGuard</span>
+                    </div>
+                </div>
+
+                <!-- 模块 3: 轻 NAS 与存储 -->
+                <div class="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/60">
+                    <div class="flex items-center gap-2 mb-3 text-purple-600 font-bold">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7C5 4 4 5 4 7zm0 5h16M9 4v16"/></svg>
+                        <h4 class="text-sm font-black text-slate-800">高速轻 NAS 与存储扩展</h4>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                        <span class="px-2 py-1 rounded bg-white text-slate-700 text-xs border border-slate-200 font-mono">kmod-nvme</span>
+                        <span class="px-2 py-1 rounded bg-white text-slate-700 text-xs border border-slate-200 font-mono">BTRFS</span>
+                        <span class="px-2 py-1 rounded bg-white text-slate-700 text-xs border border-slate-200 font-mono">Samba4</span>
+                        <span class="px-2 py-1 rounded bg-white text-slate-700 text-xs border border-slate-200 font-mono">mini-diskmanager</span>
+                        <span class="px-2 py-1 rounded bg-white text-slate-700 text-xs border border-slate-200 font-mono">partexp 分区扩容</span>
+                    </div>
+                </div>
+
+                <!-- 模块 4: 系统工具与实用套件 -->
+                <div class="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/60">
+                    <div class="flex items-center gap-2 mb-3 text-amber-600 font-bold">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/></svg>
+                        <h4 class="text-sm font-black text-slate-800">系统工具与控制台</h4>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                        <span class="px-2 py-1 rounded bg-white text-slate-700 text-xs border border-slate-200 font-mono">TTYD Web终端</span>
+                        <span class="px-2 py-1 rounded bg-white text-slate-700 text-xs border border-slate-200 font-mono">autoreboot 定时重启</span>
+                        <span class="px-2 py-1 rounded bg-white text-slate-700 text-xs border border-slate-200 font-mono">wolultra 网络唤醒</span>
+                        <span class="px-2 py-1 rounded bg-white text-slate-700 text-xs border border-slate-200 font-mono">UPnP</span>
+                        <span class="px-2 py-1 rounded bg-white text-slate-700 text-xs border border-slate-200 font-mono">iperf3</span>
+                        <span class="px-2 py-1 rounded bg-white text-slate-700 text-xs border border-slate-200 font-mono">cpufreq</span>
+                        <span class="px-2 py-1 rounded bg-white text-slate-700 text-xs border border-slate-200 font-mono">coremark</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 固件发布与极速下载中心 (核心模块) -->
+        <section id="downloads" class="glass-card-white rounded-3xl p-6 sm:p-8 md:p-12 space-y-8">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-slate-100">
+                <div>
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 text-sky-700 text-xs font-bold mb-2">
+                        <span class="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
+                        实时同步 GitHub Releases
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">固件下载与发布中心</h2>
+                    <p class="text-slate-600 text-sm mt-1">支持 GitHub 官方源与 ACG2 极速代理无缝切换，一键高速下载</p>
+                </div>
+
+                <!-- 下载加速切换模式开关 -->
+                <div class="bg-slate-100/90 p-1.5 rounded-2xl flex items-center border border-slate-200 shadow-inner">
+                    <button id="mode-proxy-btn" onclick="setDownloadMode('proxy')" class="px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all bg-white text-sky-700 shadow-sm flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        <span>🚀 ACG2 极速代理 (推荐)</span>
+                    </button>
+                    <button id="mode-direct-btn" onclick="setDownloadMode('direct')" class="px-4 py-2 rounded-xl text-xs md:text-sm font-medium transition-all text-slate-600 hover:text-slate-900 flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+                        <span>🌐 GitHub 官方源直连</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 动态渲染区：加载状态 / Releases 列表 / 编译中占位 -->
+            <div id="releases-container" class="space-y-6">
+                <!-- 骨架屏加载中 -->
+                <div id="releases-loading" class="text-center py-12 space-y-4">
+                    <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-sky-500 border-t-transparent"></div>
+                    <p class="text-slate-500 text-sm">正在检索 GitHub Releases 固件包与最新编译状态...</p>
+                </div>
+            </div>
+
+            <!-- 固件文件类型与刷机用途说明指南 -->
+            <div class="rounded-2xl p-5 bg-sky-50/70 border border-sky-200/80 text-xs text-slate-700 space-y-2">
+                <div class="font-bold text-sky-900 text-sm flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>固件文件命名与用途速查：</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                    <div class="p-2.5 rounded-xl bg-white/80 border border-sky-100">
+                        <span class="font-mono font-bold text-slate-900 text-xs">*-sysupgrade.bin</span>
+                        <p class="text-slate-600 mt-0.5"><strong>系统升级包（最常用）</strong>：已刷入 OpenWRT/ImmortalWrt 系统后，在 LuCI 网页后台「系统 -> 备份/升级」直接上传更新并保留配置。</p>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-white/80 border border-sky-100">
+                        <span class="font-mono font-bold text-slate-900 text-xs">*-factory.bin</span>
+                        <p class="text-slate-600 mt-0.5"><strong>原厂/底包直刷包</strong>：用于通过 U-Boot Web 恢复页面或原厂特权刷机模式首次刷入 OpenWrt 底层系统。</p>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-white/80 border border-sky-100">
+                        <span class="font-mono font-bold text-slate-900 text-xs">Config-*.txt</span>
+                        <p class="text-slate-600 mt-0.5"><strong>构建配置文件清单</strong>：记录该版本的全量内核与插件配置参数，方便比对差异或本地自编译复现。</p>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-white/80 border border-sky-100">
+                        <span class="font-mono font-bold text-slate-900 text-xs">manifest / sha256</span>
+                        <p class="text-slate-600 mt-0.5"><strong>校验与软件包列表</strong>：包含固件的 SHA256 安全哈希校验码，确保下载固件未被破坏或篡改。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 刷机与配置教程指引 -->
+        <section id="guide" class="glass-card-white rounded-3xl p-6 sm:p-8 md:p-12 space-y-6">
+            <div>
+                <span class="text-sky-600 text-xs sm:text-sm font-bold tracking-wider uppercase">从入门到精通</span>
+                <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-1">刷机与 5G CPE 初次配置指南</h2>
+                <p class="text-slate-600 text-sm mt-1">清晰直观的步骤指引，助您轻松完成固件更新与 5G 高速连网</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                <!-- 步骤 1 -->
+                <div class="p-6 rounded-3xl bg-slate-50/80 border border-slate-200/70 relative">
+                    <span class="absolute top-5 right-5 text-4xl font-black text-slate-200 font-mono">01</span>
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">获取并校验固件</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed space-y-2">
+                        1. 从上方「固件下载」区选择对应版本的 <code class="font-mono text-sky-700 bg-sky-50 px-1 py-0.5 rounded">sysupgrade.bin</code> 固件。<br>
+                        2. 推荐启用 <strong class="text-slate-800">ACG2 极速代理</strong>，国内千兆满速直下。<br>
+                        3. 校验下载文件的完整性，防止因网络波动导致文件损坏。
+                    </p>
+                </div>
+
+                <!-- 步骤 2 -->
+                <div class="p-6 rounded-3xl bg-slate-50/80 border border-slate-200/70 relative">
+                    <span class="absolute top-5 right-5 text-4xl font-black text-slate-200 font-mono">02</span>
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">上传与刷写系统</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed space-y-2">
+                        1. 浏览器打开原有后台 <a href="http://192.168.10.1" class="text-sky-600 underline">192.168.10.1</a>（若原厂为其他网段请按实际访问）。<br>
+                        2. 进入菜单：<strong>系统 ➔ 备份/升级 ➔ 刷写新的固件</strong>。<br>
+                        3. 上传 bin 文件，确认校验和后点击「继续」，等待 2-3 分钟系统自动烧录并重启（切勿断电）。
+                    </p>
+                </div>
+
+                <!-- 步骤 3 -->
+                <div class="p-6 rounded-3xl bg-slate-50/80 border border-slate-200/70 relative">
+                    <span class="absolute top-5 right-5 text-4xl font-black text-slate-200 font-mono">03</span>
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">开箱体验 5G 极速</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed space-y-2">
+                        1. 设备启动后自动搜寻并连接 5G 蜂窝基站，默认 Wi-Fi 为 <code class="font-mono text-slate-800 font-bold">OWRT</code>（密码 <code class="font-mono">12345678</code>）。<br>
+                        2. 浏览器访问 <code class="font-mono font-bold text-sky-700">192.168.10.1</code>，账号 <code class="font-mono font-bold">root</code>，无密码直接回车。<br>
+                        3. 进入「网络 ➔ MT5700M 5G 模组」查看信号强度、锁定优势频段或收发短信。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 嵌入式 GitHub 代理加速工具卡片 (基于 gh.acg2.mom) -->
+        <section id="proxy-tool" class="glass-card-white rounded-3xl p-6 sm:p-8 md:p-12 relative overflow-hidden">
+            <div class="max-w-3xl">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">加速服务</span>
+                    <span class="text-slate-500 text-xs">由 gh.acg2.mom 强力驱动</span>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">GitHub 资源极速代理工具</h2>
+                <p class="text-slate-600 text-sm mt-2 mb-6">
+                    在下方输入任意 GitHub 链接（Release、Raw 脚本、Release 资产、源码 zip），点击即可通过 <strong class="text-slate-800">gh.acg2.mom</strong> 全球边缘节点极速下载！
+                </p>
+
+                <div class="space-y-4">
+                    <div class="relative">
+                        <input type="url" id="proxy-input" placeholder="粘贴 GitHub 链接，如 https://github.com/.../releases/..."
+                               class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm md:text-base font-mono text-slate-900 placeholder-slate-400">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <button onclick="handleProxyJump()" class="py-3.5 px-6 rounded-xl bg-slate-900 hover:bg-black text-white font-bold text-sm transition-all shadow-sm active:scale-95 flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            <span>立即加速跳转</span>
+                        </button>
+                        <button onclick="handleProxyCopyFull()" class="py-3.5 px-6 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm transition-all shadow-sm active:scale-95 flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                            <span>复制加速链接</span>
+                        </button>
+                        <button onclick="handleProxyCopyPrefix()" class="py-3.5 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition-all shadow-sm active:scale-95 flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                            <span>复制前缀 (gh.acg2.mom)</span>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center justify-between text-xs text-slate-500 pt-2">
+                        <span>支持格式：Raw · Releases · Archive · Gist · Blob</span>
+                        <a href="https://gh.acg2.mom/" target="_blank" rel="noopener noreferrer" class="text-sky-600 hover:underline">访问 gh.acg2.mom 官网 ↗</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 开源生态致敬与鸣谢 -->
+        <section class="glass-card-white rounded-3xl p-6 sm:p-8 md:p-12 space-y-6">
+            <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">开源致敬与鸣谢</h2>
+            <p class="text-slate-600 text-sm">本项目基于以下优秀的开源项目与贡献者成果，向开源社区致以最诚挚的敬意：</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+                <a href="https://github.com/immortalwrt/immortalwrt" target="_blank" rel="noopener noreferrer" class="p-4 rounded-2xl bg-slate-50 hover:bg-sky-50/60 border border-slate-200/60 transition-all group">
+                    <div class="font-bold text-slate-900 group-hover:text-sky-600 flex items-center justify-between">
+                        <span>ImmortalWrt</span>
+                        <span class="text-xs text-slate-400 group-hover:text-sky-500">↗</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1">功能丰富、性能优越的顶级主线路由开源系统底包</p>
+                </a>
+
+                <a href="https://github.com/VIKINGYFY" target="_blank" rel="noopener noreferrer" class="p-4 rounded-2xl bg-slate-50 hover:bg-sky-50/60 border border-slate-200/60 transition-all group">
+                    <div class="font-bold text-slate-900 group-hover:text-sky-600 flex items-center justify-between">
+                        <span>VIKINGYFY</span>
+                        <span class="text-xs text-slate-400 group-hover:text-sky-500">↗</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1">提供实机长期验证的高质量 Actions 云端构建架构与组件源</p>
+                </a>
+
+                <a href="https://github.com/FAN789" target="_blank" rel="noopener noreferrer" class="p-4 rounded-2xl bg-slate-50 hover:bg-sky-50/60 border border-slate-200/60 transition-all group">
+                    <div class="font-bold text-slate-900 group-hover:text-sky-600 flex items-center justify-between">
+                        <span>FAN789</span>
+                        <span class="text-xs text-slate-400 group-hover:text-sky-500">↗</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1">研发 MT5700M 模组控制、智能温控与网络模式核心专属插件</p>
+                </a>
+
+                <a href="https://github.com/LianXia233" target="_blank" rel="noopener noreferrer" class="p-4 rounded-2xl bg-slate-50 hover:bg-sky-50/60 border border-slate-200/60 transition-all group">
+                    <div class="font-bold text-slate-900 group-hover:text-sky-600 flex items-center justify-between">
+                        <span>LianXia233</span>
+                        <span class="text-xs text-slate-400 group-hover:text-sky-500">↗</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1">项目构建调优、日常 Actions 维护与自动化发布</p>
+                </a>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="glass-nav mt-12 py-8 text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-700">OpenWRT-CI-H5000M</span>
+                <span>·</span>
+                <span>基于 <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" class="hover:underline text-slate-600">GPL-3.0 License</a> 开源</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="https://github.com/LianXia233/OpenWRT-CI-H5000M" target="_blank" class="hover:text-sky-600 transition-colors">GitHub 仓库</a>
+                <a href="https://github.com/LianXia233/OpenWRT-CI-H5000M/actions" target="_blank" class="hover:text-sky-600 transition-colors">CI 构建中心</a>
+                <a href="https://gh.acg2.mom/" target="_blank" class="hover:text-sky-600 transition-colors">ACG2 极速加速</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast 提示框 -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-5 py-2.5 rounded-2xl shadow-2xl text-xs sm:text-sm font-medium z-50 transition-opacity duration-300 opacity-0 pointer-events-none flex items-center gap-2">
+        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        <span id="toast-text">通知消息</span>
+    </div>
+
+    <!-- 核心交互脚本 -->
+    <script>
+        // 配置常量
+        const REPO_OWNER = 'LianXia233';
+        const REPO_NAME = 'OpenWRT-CI-H5000M';
+        const PROXY_BASE = 'https://gh.acg2.mom/';
+
+        // 当前下载模式：'proxy' (默认使用 gh.acg2.mom 加速) 或 'direct' (官方直连)
+        let currentDownloadMode = 'proxy';
+        let latestReleasesData = [];
+
+        // 切换下载加速模式
+        function setDownloadMode(mode) {
+            currentDownloadMode = mode;
+            const proxyBtn = document.getElementById('mode-proxy-btn');
+            const directBtn = document.getElementById('mode-direct-btn');
+
+            if (mode === 'proxy') {
+                proxyBtn.className = 'px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all bg-white text-sky-700 shadow-sm flex items-center gap-1.5';
+                directBtn.className = 'px-4 py-2 rounded-xl text-xs md:text-sm font-medium transition-all text-slate-600 hover:text-slate-900 flex items-center gap-1.5';
+                showToast('已启用 ACG2 极速代理下载模式 (推荐)');
+            } else {
+                directBtn.className = 'px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all bg-white text-sky-700 shadow-sm flex items-center gap-1.5';
+                proxyBtn.className = 'px-4 py-2 rounded-xl text-xs md:text-sm font-medium transition-all text-slate-600 hover:text-slate-900 flex items-center gap-1.5';
+                showToast('已切换为 GitHub 官方源直连模式');
+            }
+
+            // 重新渲染固件列表按钮
+            renderReleases(latestReleasesData);
+        }
+
+        // 获取加速后的下载链接
+        function formatDownloadUrl(rawUrl) {
+            if (!rawUrl) return '';
+            if (currentDownloadMode === 'proxy') {
+                return PROXY_BASE + rawUrl;
+            }
+            return rawUrl;
+        }
+
+        // 文件大小格式化
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        // 时间格式化
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const d = new Date(dateString);
+            return d.toLocaleDateString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // 异步获取 GitHub Releases 固件
+        async function fetchReleases() {
+            const container = document.getElementById('releases-container');
+            const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    headers: { 'Accept': 'application/vnd.github.v3+json' }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`GitHub API HTTP ${response.status}`);
+                }
+
+                const releases = await response.json();
+                latestReleasesData = releases;
+                renderReleases(releases);
+            } catch (err) {
+                console.warn('获取 Release 异常，加载友好 fallback 界面:', err);
+                renderFallbackBuildStatus();
+            }
+        }
+
+        // 渲染 Release 列表
+        function renderReleases(releases) {
+            const container = document.getElementById('releases-container');
+
+            if (!releases || releases.length === 0) {
+                renderFallbackBuildStatus();
+                return;
+            }
+
+            let html = '';
+
+            releases.forEach((rel, index) => {
+                const isLatest = index === 0;
+                const releaseDate = formatDate(rel.published_at || rel.created_at);
+
+                html += `
+                <div class="rounded-3xl p-6 md:p-8 bg-slate-50/90 border border-slate-200/80 shadow-sm hover:shadow-md transition-all">
+                    <!-- Release 头部 -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200/60">
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h3 class="text-xl md:text-2xl font-black text-slate-900">${escapeHtml(rel.name || rel.tag_name)}</h3>
+                                ${isLatest ? '<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">最新版本 Latest</span>' : ''}
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-sky-100 text-sky-800 border border-sky-200">${escapeHtml(rel.tag_name)}</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1 flex items-center gap-2">
+                                <span>发布时间：${releaseDate}</span>
+                                <span>·</span>
+                                <a href="${rel.html_url}" target="_blank" rel="noopener noreferrer" class="text-sky-600 hover:underline">查看 GitHub Release ↗</a>
+                            </p>
+                        </div>
+
+                        <!-- 模式提示状态徽章 -->
+                        <div class="text-xs font-semibold px-3 py-1.5 rounded-xl ${currentDownloadMode === 'proxy' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-blue-50 text-blue-700 border border-blue-200'} self-start sm:self-center">
+                            ${currentDownloadMode === 'proxy' ? '⚡ 极速代理下载就绪' : '🌐 GitHub 原链直连'}
+                        </div>
+                    </div>
+
+                    <!-- 固件文件列表 -->
+                    <div class="mt-6 space-y-3">
+                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">固件文件与配置资产 (${rel.assets ? rel.assets.length : 0})</h4>
+                        
+                        ${rel.assets && rel.assets.length > 0 ? `
+                        <div class="grid grid-cols-1 gap-2.5">
+                            ${rel.assets.map(asset => {
+                                const dlUrl = formatDownloadUrl(asset.browser_download_url);
+                                const isBin = asset.name.endsWith('.bin') || asset.name.endsWith('.img.gz');
+                                const isConfig = asset.name.startsWith('Config');
+                                const sizeStr = formatBytes(asset.size);
+
+                                return `
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-white border border-slate-200 hover:border-sky-300 transition-all">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <div class="w-9 h-9 rounded-xl ${isBin ? 'bg-sky-100 text-sky-600' : isConfig ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-600'} flex items-center justify-center shrink-0">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <p class="text-xs sm:text-sm font-mono font-bold text-slate-900 truncate" title="${escapeHtml(asset.name)}">${escapeHtml(asset.name)}</p>
+                                            <div class="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5">
+                                                <span>${sizeStr}</span>
+                                                <span>·</span>
+                                                <span>下载次数: ${asset.download_count}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        <button onclick="copyText('${dlUrl}', '已复制${currentDownloadMode === 'proxy' ? '加速' : ''}下载链接')" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-all" title="复制下载链接">
+                                            复制链接
+                                        </button>
+                                        <a href="${dlUrl}" target="_blank" rel="noopener noreferrer" class="px-4 py-2 rounded-xl ${isBin ? 'bg-sky-600 hover:bg-sky-700 text-white' : 'bg-slate-800 hover:bg-slate-900 text-white'} text-xs font-bold transition-all shadow-sm flex items-center gap-1">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                            <span>${currentDownloadMode === 'proxy' ? '极速下载' : '直接下载'}</span>
+                                        </a>
+                                    </div>
+                                </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        ` : `
+                        <p class="text-xs text-slate-500 py-3">本 Release 暂未包含附件资产。</p>
+                        `}
+                    </div>
+
+                    <!-- 说明信息 -->
+                    ${rel.body ? `
+                    <div class="mt-5 pt-4 border-t border-slate-200/50">
+                        <details class="text-xs text-slate-600 cursor-pointer">
+                            <summary class="font-bold text-slate-700 hover:text-sky-600 select-none">展开构建日志与提交信息详情 ▾</summary>
+                            <pre class="mt-2.5 p-4 rounded-2xl bg-white border border-slate-200 text-[11px] font-mono whitespace-pre-wrap text-slate-700 overflow-x-auto">${escapeHtml(rel.body)}</pre>
+                        </details>
+                    </div>
+                    ` : ''}
+                </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // 当 Releases 正在云端编译或处于轮替清理状态时的优雅卡片
+        function renderFallbackBuildStatus() {
+            const container = document.getElementById('releases-container');
+            const expectedSysupgrade = `https://github.com/${REPO_OWNER}/${REPO_NAME}/releases`;
+            const proxySysupgrade = formatDownloadUrl(expectedSysupgrade);
+
+            container.innerHTML = `
+            <div class="rounded-3xl p-6 sm:p-8 md:p-10 bg-slate-50/90 border border-slate-200 shadow-sm space-y-6">
+                <!-- 顶部编译进行中状态 -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
+                    <div class="flex items-start sm:items-center gap-3.5">
+                        <div class="w-11 h-11 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center shrink-0">
+                            <svg class="w-6 h-6 animate-spin text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-xl font-black text-slate-900">云端 Actions 自动构建中 / Release 刷新中</h3>
+                                <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">MTK-AUTO 每日构建</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">
+                                本项目配置了每天 05:00 定时清理旧版本并重新构建最新主线（VIKINGYFY/owrt），新版本编译完成后将立即自动归档至 Releases！
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button onclick="fetchReleases()" class="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200 shadow-sm flex items-center gap-1.5 active:scale-95 transition-all">
+                            <svg class="w-3.5 h-3.5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            <span>刷新检测</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 预期发布清单预告 -->
+                <div class="space-y-3">
+                    <h4 class="text-xs font-bold text-slate-600 uppercase tracking-wider">预期发布固件制品清单 (Hiveton H5000M 5G CPE):</h4>
+                    
+                    <div class="grid grid-cols-1 gap-2.5">
+                        <div class="p-3.5 rounded-2xl bg-white border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <span class="w-8 h-8 rounded-lg bg-sky-100 text-sky-600 flex items-center justify-center text-xs font-bold font-mono">BIN</span>
+                                <div>
+                                    <p class="text-xs sm:text-sm font-mono font-bold text-slate-900">openwrt-mediatek-filogic-hiveton_h5000m-squashfs-sysupgrade.bin</p>
+                                    <p class="text-[11px] text-slate-400">系统在线升级包 · 集成 MT5700M 驱动/风扇温控/网络模式/TTYD/HomeProxy</p>
+                                </div>
+                            </div>
+                            <span class="text-xs font-medium text-amber-600 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200 self-start sm:self-center">编译完毕即刻发布</span>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-white border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <span class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold font-mono">BIN</span>
+                                <div>
+                                    <p class="text-xs sm:text-sm font-mono font-bold text-slate-900">openwrt-mediatek-filogic-hiveton_h5000m-squashfs-factory.bin</p>
+                                    <p class="text-[11px] text-slate-400">底层初次刷机固件包 · 适用于 U-Boot 救砖与首次刷入</p>
+                                </div>
+                            </div>
+                            <span class="text-xs font-medium text-amber-600 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200 self-start sm:self-center">编译完毕即刻发布</span>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-white border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <span class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-xs font-bold font-mono">TXT</span>
+                                <div>
+                                    <p class="text-xs sm:text-sm font-mono font-bold text-slate-900">Config-MEDIATEK-WIFI-YES-VIKINGYFY-owrt-*.txt</p>
+                                    <p class="text-[11px] text-slate-400">完整编译 .config 清单 · 包含所有选中的 kmod 与 luci 扩展包</p>
+                                </div>
+                            </div>
+                            <span class="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg self-start sm:self-center">自动归档</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 动作指引与链接 -->
+                <div class="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span>可随时在 GitHub Actions 查看编译日志或手动触发构建</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <a href="https://github.com/${REPO_OWNER}/${REPO_NAME}/actions" target="_blank" rel="noopener noreferrer" class="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold hover:bg-black transition-all">
+                            查看 Actions 构建流程 ↗
+                        </a>
+                        <a href="https://github.com/${REPO_OWNER}/${REPO_NAME}/releases" target="_blank" rel="noopener noreferrer" class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-100 transition-all">
+                            前往 GitHub Releases ↗
+                        </a>
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+
+        // 代理加速工具快捷逻辑
+        function getCleanProxyInput() {
+            const input = document.getElementById('proxy-input').value.trim();
+            if (!input) return '';
+            if (input.startsWith(PROXY_BASE)) {
+                return input.slice(PROXY_BASE.length);
+            }
+            return input.replace(/^https?:\/+/, 'https://');
+        }
+
+        function handleProxyJump() {
+            const clean = getCleanProxyInput();
+            if (!clean) {
+                showToast('请先输入有效的 GitHub 链接');
+                return;
+            }
+            window.open(PROXY_BASE + clean, '_blank');
+        }
+
+        function handleProxyCopyFull() {
+            const clean = getCleanProxyInput();
+            if (!clean) {
+                showToast('请先输入有效的 GitHub 链接');
+                return;
+            }
+            copyText(PROXY_BASE + clean, '已复制 ACG2 极速加速完整链接');
+        }
+
+        function handleProxyCopyPrefix() {
+            copyText(PROXY_BASE, '已复制加速服务前缀：' + PROXY_BASE);
+        }
+
+        // 通用复制与 Toast 弹窗反馈
+        function copyText(text, successMsg) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(
+                    () => showToast(successMsg),
+                    () => fallbackCopy(text, successMsg)
+                );
+            } else {
+                fallbackCopy(text, successMsg);
+            }
+        }
+
+        function fallbackCopy(text, successMsg) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.setAttribute('readonly', '');
+            textarea.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;padding:0;border:0;opacity:0;pointer-events:none;';
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            try {
+                const ok = document.execCommand('copy');
+                showToast(ok ? successMsg : '复制失败，请手动长按复制');
+            } catch (err) {
+                showToast('复制失败，请手动复制');
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        }
+
+        let toastTimer = null;
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const text = document.getElementById('toast-text');
+            text.textContent = msg;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.add('opacity-100');
+
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 2200);
+        }
+
+        // HTML 转义防止 XSS
+        function escapeHtml(string) {
+            if (!string) return '';
+            const entityMap = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;',
+                '/': '&#x2F;'
+            };
+            return String(string).replace(/[&<>"'\/]/g, s => entityMap[s]);
+        }
+
+        // 移动端汉堡菜单控制
+        const mobileBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const menuIcon = document.getElementById('menu-icon');
+        const closeIcon = document.getElementById('close-icon');
+
+        if (mobileBtn && mobileMenu) {
+            mobileBtn.addEventListener('click', () => {
+                const isOpen = !mobileMenu.classList.contains('hidden');
+                if (isOpen) {
+                    mobileMenu.classList.add('hidden');
+                    menuIcon.classList.remove('hidden');
+                    closeIcon.classList.add('hidden');
+                } else {
+                    mobileMenu.classList.remove('hidden');
+                    menuIcon.classList.add('hidden');
+                    closeIcon.classList.remove('hidden');
+                }
+            });
+
+            // 点击菜单项后自动收起
+            mobileMenu.querySelectorAll('a').forEach(a => {
+                a.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                    menuIcon.classList.remove('hidden');
+                    closeIcon.classList.add('hidden');
+                });
+            });
+        }
+
+        // 初始化加载
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchReleases();
+        });
+    </script>
+</body>
+</html>
