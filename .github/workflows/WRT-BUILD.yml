@@ -18,15 +18,15 @@ on:
           - MEDIATEK-WIFI-YES
       SOURCE:
         description: '源码仓库'
-        default: 'immortalwrt/immortalwrt'
+        default: 'VIKINGYFY/immortalwrt'
         required: true
         type: choice
         options:
-          - immortalwrt/immortalwrt
           - VIKINGYFY/immortalwrt
+          - immortalwrt/immortalwrt
       BRANCH:
-        description: '源码分支（immortalwrt 用 master，VIKINGYFY 用 main）'
-        default: 'master'
+        description: '源码分支（VIKINGYFY 用 owrt，immortalwrt 用 master）'
+        default: 'owrt'
         required: true
         type: string
       PACKAGE:

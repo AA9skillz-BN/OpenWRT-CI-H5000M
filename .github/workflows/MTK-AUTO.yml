@@ -33,8 +33,8 @@ jobs:
       matrix:
         # H5000M 专用：仅编译 MEDIATEK-WIFI-YES
         CONFIG: [MEDIATEK-WIFI-YES]
-        SOURCE: [immortalwrt/immortalwrt]
-        BRANCH: [master]
+        SOURCE: [VIKINGYFY/immortalwrt]
+        BRANCH: [owrt]
 
     uses: ./.github/workflows/WRT-CORE.yml
     with:

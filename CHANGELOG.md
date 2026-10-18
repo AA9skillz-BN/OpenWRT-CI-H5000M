@@ -2,6 +2,33 @@
 
 本仓库的所有重要变更都会记录在此文件中。
 
+## [2026-10-18] 切换构建源码：immortalwrt/immortalwrt@master → VIKINGYFY/immortalwrt@owrt
+
+### 背景
+
+此前全量定时（MTK-AUTO）与手动（WRT-BUILD）构建均基于官方
+`immortalwrt/immortalwrt@master`。为与 VIKINGYFY 生态（构建脚手架与
+`VIKINGYFY/packages` feed）保持同源、降低跨仓库版本漂移，现将底层源码
+切换为 `VIKINGYFY/immortalwrt` 的 `owrt` 分支（commit 99c39ee）。
+
+### 变更
+
+- `MTK-AUTO.yml`：定时/自动构建 matrix 由 `SOURCE: [immortalwrt/immortalwrt]` /
+  `BRANCH: [master]` 改为 `SOURCE: [VIKINGYFY/immortalwrt]` / `BRANCH: [owrt]`。
+- `WRT-BUILD.yml`：手动触发默认 `SOURCE` 改为 `VIKINGYFY/immortalwrt`，默认
+  `BRANCH` 改为 `owrt`，并同步更新分支选择说明（VIKINGYFY 用 owrt，immortalwrt 用 master）；
+  官方 `immortalwrt/immortalwrt` 仍保留为可选源码，便于随时回退。
+- `index.html`：落地页“固件源码”徽章与规格卡同步更新为 VIKINGYFY/immortalwrt@owrt。
+- 打包产物命名随之变化：`WRT_INFO`=VIKINGYFY、Release Tag 携带 `-owrt-` 后缀，
+  与既有“按变体清晰区分”策略一致。
+- packages feed 仍为 `VIKINGYFY/packages@main`（独立仓库，本次未改动），与源码同源。
+
+### 影响
+
+- 内核版本、插件清单、Release 标签将反映 VIKINGYFY/immortalwrt@owrt 的真实提交。
+- 首次基于 owrt 分支构建将因源码变化而命中新的缓存键（ccache/toolchain），
+  首次编译耗时可能增加，属预期行为。
+
 ## [2026-10-17] 修复全平台编译中断：移除 immortalwrt/packages 中过时的 miniupnpd 补丁
 
 ### 背景
