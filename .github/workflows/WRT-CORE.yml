@@ -74,35 +74,53 @@ jobs:
           # apt 全局超时配置：覆盖本步骤及 init_build_environment.sh 内部 apt 调用，
           # 避免偶发网络挂起导致 job 6 小时超时取消
           sudo tee /etc/apt/apt.conf.d/99marvis-timeouts >/dev/null <<'EOF'
-          Acquire::Retries "3";
+          Acquire::Retries "5";
           Acquire::http::Timeout "60";
           Acquire::https::Timeout "60";
           Acquire::ftp::Timeout "60";
           DPkg::Lock::Timeout "120";
+          Dpkg::Use-Pty "0";
           EOF
           # apt 命令超时重试封装
+          # 用法：apt_retry <超时秒数> <apt 子命令及参数...>
+          # 不同命令耗时差异很大（full-upgrade 在 runner 镜像更新后可能要下载数百 MB），
+          # 统一 300 秒会把正常的慢速下载误杀，故超时时间改为按命令传入。
           apt_retry() {
-            local cmd="$1"; shift
+            local tmo="$1"; shift
+            local i
             for i in 1 2 3; do
-              timeout 300 sudo -E apt -yqq "$cmd" "$@" && return 0
-              echo "apt $cmd 第 ${i} 次失败或超时，10 秒后重试" >&2
+              timeout --kill-after=30 "$tmo" sudo -E apt -yqq \
+                -o Dpkg::Options::=--force-confdef \
+                -o Dpkg::Options::=--force-confold "$@" && return 0
+              echo "apt $* 第 ${i} 次失败或超时（${tmo}s），10 秒后重试" >&2
               sleep 10
             done
             return 1
           }
-          apt_retry purge firefox
-          apt_retry update
-          apt_retry full-upgrade
-          apt_retry autoremove --purge
-          apt_retry autoclean
-          apt_retry clean
-          apt_retry install dos2unix libfuse-dev
+          apt_retry 300 purge firefox
+          apt_retry 300 update
+          # 主机系统升级不是编译必需项：慢网络下允许更长耗时，失败也不阻塞后续流程，
+          # 只需修复可能被中断的 dpkg 状态即可。
+          if ! apt_retry 1800 full-upgrade; then
+            echo "系统升级失败或超时，修复 dpkg 状态后继续" >&2
+            sudo -E dpkg --configure -a || true
+            sudo -E apt -yqq -f install || true
+          fi
+          apt_retry 300 autoremove --purge
+          apt_retry 300 autoclean
+          apt_retry 300 clean
+          apt_retry 900 install dos2unix libfuse-dev
           # 官方初始化脚本同样加超时与重试（脚本内部有 apt update 步骤）
+          INIT_OK=0
           for i in 1 2 3; do
-            timeout 600 sudo bash -c 'bash <(curl -sL --retry 3 --connect-timeout 30 https://build-scripts.immortalwrt.org/init_build_environment.sh)' && break
+            timeout --kill-after=30 1800 sudo bash -c 'bash <(curl -sL --retry 3 --connect-timeout 30 https://build-scripts.immortalwrt.org/init_build_environment.sh)' && { INIT_OK=1; break; }
             echo "init_build_environment 第 ${i} 次失败或超时，10 秒后重试" >&2
             sleep 10
           done
+          if [ "$INIT_OK" != "1" ]; then
+            echo "init_build_environment 连续失败，终止以避免后续编译无谓耗时" >&2
+            exit 1
+          fi
           sudo -E systemctl daemon-reload
           sudo -E timedatectl set-timezone "Asia/Shanghai"
 
