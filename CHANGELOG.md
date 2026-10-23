@@ -2,6 +2,61 @@
 
 本仓库的所有重要变更都会记录在此文件中。
 
+## [2026-10-23] 深度适配 FAN789/luci-app-mt5700m v3.0.3
+
+### 背景
+
+luci-app-mt5700m 已迭代至 3.0.3：以自有原生 C 程序 `mt5700m-transport`
+替代 `ubus-at-daemon` / `sms-tool` / QModem 服务，运行时依赖收敛为
+`luci-base`、`mt5700m-transport`、`flock`、`curl`、`odhcp6c` 与六个 USB
+kmod。本仓库虽已基础集成，但存在配置覆盖冲突、依赖缺失、文档过时
+与无回归防线四项问题，本次一并修复。
+
+### 变更
+
+- `Config/GENERAL.txt`：`CONFIG_TARGET_MULTI_PROFILE` 由 `y` 改回 `n`。
+  该配置后于设备配置（`MEDIATEK-WIFI-YES.txt` 中为 `n`）追加进 `.config`，
+  Kconfig 对重复符号后读覆盖，实际一直编译整个 filogic 平台全部 profile
+  （数十台设备），与「仅编译 Hiveton H5000M」意图相反；同步将
+  `CONFIG_TARGET_PER_DEVICE_ROOTFS` 改为 `n`（单设备构建下无意义）。
+- `Config/GENERAL.txt`：补充 MT5700M 运行时依赖 `flock` 与 `odhcp6c`
+  （上游 README 点名组件；USB kmod 六件套此前已齐备）。
+- `Scripts/Packages.sh`：移除 `qmodem`（FUjr/QModem）clone。该插件从未
+  被本固件启用，且与 luci-app-mt5700m 争抢同一 AT 串口；luci-app-mt5700m
+  3.0.x 已完整覆盖其功能。恢复方法见脚本内注释。
+- `Scripts/Packages.sh`：新增 FAN789 仓库结构校验与版本记录——校验
+  `luci-app-mt5700m/` 与 `mt5700m-transport/` 两个 Makefile 存在
+  （immortalwrt `include/scan.mk` 以 `SCAN_DEPTH=5` 扫描 package/ 树，
+  二级子目录可被正常识别），并将版本号写入 `GITHUB_ENV`（`MT5700M_VERSION`）。
+- `.github/workflows/WRT-CORE.yml`：
+  - 新增 `Free Up Disk Space` 步骤，清理 runner 预装的 dotnet /
+    android-sdk / ghc 等无关目录（约 25GB），保障 filogic 全量编译
+    与 ccache 空间。
+  - 新增 `Smoke Test MT5700M Package` 步骤：在耗时编译前，对 clone 的
+    luci-app-mt5700m 执行上游 `ci.yml` 同款检查——shell 语法与回归测试、
+    `mt5700m-transport` C 程序编译（`-Wall -Wextra -Werror`）与模拟 modem
+    测试、可执行位、LuCI JS 语法、UI 错误处理、短信解码 / 任务、健康
+    恢复、配置回滚、menu/acl JSON 与 zh_Hans 翻译文件校验。上游引入
+    破坏性变更时在数分钟内失败，而非数小时后在 Compile Firmware 暴露。
+  - `Initialization Environment` 安装 `gettext`（提供 `msgfmt`）。
+  - Release Notes 新增「MT5700M 插件版本」行。
+- `README.md`：MT5700M 插件章节按 3.0.x 实际架构重写（自有
+  `mt5700m-transport`、短信 UTF-16 多段、流量历史、温度缓存、链路健康
+  自愈、APN 回滚），删除 `ubus-at-daemon` / `sms-tool` 过时描述；
+  修正 Auto-Clean 行为描述（清理全部历史 Release，与实际配置一致）。
+- `.gitattributes`：由仅覆盖 `*.txt` / `*.sh` 升级为 `* text=auto eol=lf`，
+  覆盖 `.yml` / `.json` 等全部文本文件，保证任何平台提交均为 LF。
+- `index.html`：MT5700M 亮点卡片补充 3.0.x 特性描述。
+
+### 验证
+
+- 本地对全部 workflow 执行 YAML 解析校验，对全部脚本执行
+  `bash -n` / `sh -n` 校验。
+- 本地模拟 Kconfig 后读覆盖行为，确认 MULTI_PROFILE 修复后
+  `.config` 终态为 `n`。
+- Smoke Test 全部命令在本地对 clone 的 FAN789/luci-app-mt5700m
+  （93f6a65）干跑通过。完整编译链路由下一次 MTK-AUTO 定时构建覆盖。
+
 ## [2026-10-23] 修复初始化环境超时导致 CI 失败
 
 ### 背景

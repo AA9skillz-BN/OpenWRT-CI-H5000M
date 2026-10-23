@@ -67,6 +67,16 @@ jobs:
       - name: Checkout Projects
         uses: actions/checkout@v4
 
+      - name: Free Up Disk Space
+        # GitHub ubuntu-latest runner 根盘预装 dotnet/android-sdk/ghc 等占用约 25GB，
+        # filogic 全量编译 + ccache 需要 30GB 以上，先清理与编译无关的预装件。
+        # 这些目录不影响 apt 与构建工具链，runner 为一次性环境，删除安全。
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+            /usr/local/share/boost /usr/local/lib/node_modules \
+            /usr/lib/google-cloud-sdk /opt/hostedtoolcache/CodeQL 2>/dev/null || true
+          df -h / /mnt 2>/dev/null || true
+
       - name: Initialization Environment
         env:
           DEBIAN_FRONTEND: noninteractive
@@ -109,7 +119,7 @@ jobs:
           apt_retry 300 autoremove --purge
           apt_retry 300 autoclean
           apt_retry 300 clean
-          apt_retry 900 install dos2unix libfuse-dev
+          apt_retry 900 install dos2unix libfuse-dev gettext
           # 官方初始化脚本同样加超时与重试（脚本内部有 apt update 步骤）
           INIT_OK=0
           for i in 1 2 3; do
@@ -215,6 +225,77 @@ jobs:
           $GITHUB_WORKSPACE/Scripts/Packages.sh
           $GITHUB_WORKSPACE/Scripts/Handles.sh
 
+      - name: Smoke Test MT5700M Package
+        # 在耗时编译前，对刚 clone 的 FAN789/luci-app-mt5700m 执行其上游
+        # .github/workflows/ci.yml 同款静态检查与回归测试。上游引入语法错误、
+        # 编译破坏或行为回归时在此尽早失败，避免数小时后才在 Compile Firmware
+        # 暴露。ubuntu-latest 自带 gcc / python3 / node / jq；msgfmt 依赖
+        # gettext（已在 Initialization Environment 安装）。
+        run: |
+          cd ./wrt/package/luci-app-mt5700m
+
+          echo "==> Shell 语法检查"
+          for SH in \
+            luci-app-mt5700m/root/etc/hotplug.d/usb/60-mt5700m \
+            luci-app-mt5700m/root/etc/init.d/mt5700m-manager \
+            luci-app-mt5700m/root/etc/init.d/mt5700m-traffic \
+            luci-app-mt5700m/root/etc/hotplug.d/net/95-mt5700m-traffic \
+            luci-app-mt5700m/root/etc/uci-defaults/90-mt5700m \
+            luci-app-mt5700m/root/etc/uci-defaults/92-mt5700m-traffic \
+            luci-app-mt5700m/root/usr/libexec/rpcd/mt5700m \
+            luci-app-mt5700m/root/usr/libexec/rpcd/mt5700m-traffic \
+            luci-app-mt5700m/root/usr/sbin/mt5700m-at \
+            luci-app-mt5700m/root/usr/sbin/mt5700m-read \
+            luci-app-mt5700m/root/usr/sbin/mt5700m-manager \
+            luci-app-mt5700m/root/usr/sbin/mt5700m-traffic \
+            luci-app-mt5700m/root/usr/share/mt5700m/usb.sh \
+            luci-app-mt5700m/root/usr/share/mt5700m/health.sh \
+            luci-app-mt5700m/root/usr/share/mt5700m/lock.sh \
+            luci-app-mt5700m/root/usr/share/mt5700m/profile.sh; do
+            sh -n "$SH"
+          done
+
+          echo "==> Shell 回归测试"
+          sh luci-app-mt5700m/tests/test-usb-detection.sh
+          sh luci-app-mt5700m/tests/test-temperature-cache.sh
+          sh luci-app-mt5700m/tests/test-read-cache.sh
+          sh luci-app-mt5700m/tests/test-command-contract.sh
+          sh luci-app-mt5700m/tests/test-hotplug-debounce.sh
+          sh luci-app-mt5700m/tests/test-traffic-interface.sh
+
+          echo "==> 原生传输程序编译与模拟测试"
+          gcc -O2 -Wall -Wextra -Werror mt5700m-transport/src/transport.c -o /tmp/mt5700m-transport-test
+          TRANSPORT_BIN=/tmp/mt5700m-transport-test python3 mt5700m-transport/tests/test_transport.py -v
+
+          echo "==> 可执行位检查"
+          test -x luci-app-mt5700m/root/usr/sbin/mt5700m-read
+          test -x luci-app-mt5700m/root/usr/sbin/mt5700m-traffic
+          test -x luci-app-mt5700m/root/usr/libexec/rpcd/mt5700m-traffic
+          test -x luci-app-mt5700m/root/etc/init.d/mt5700m-traffic
+          test -x luci-app-mt5700m/root/etc/hotplug.d/net/95-mt5700m-traffic
+          test -x luci-app-mt5700m/root/etc/uci-defaults/92-mt5700m-traffic
+
+          echo "==> LuCI JavaScript 语法检查"
+          find luci-app-mt5700m/htdocs -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+
+          echo "==> UI 错误处理与短信解码测试"
+          node tests/test-ui-errors.js
+          node tests/test-sms-decode.js
+          sh tests/test-action-lock.sh
+          sh tests/test-sms-jobs.sh
+          sh tests/test-health.sh
+          sh tests/test-profile-rollback.sh
+          node tests/test-sms-ui.js
+
+          echo "==> JSON 元数据校验"
+          jq empty luci-app-mt5700m/root/usr/share/luci/menu.d/luci-app-mt5700m.json
+          jq empty luci-app-mt5700m/root/usr/share/rpcd/acl.d/luci-app-mt5700m.json
+
+          echo "==> 翻译文件校验"
+          msgfmt --check --check-format -o /dev/null luci-app-mt5700m/po/zh_Hans/mt5700m.po
+
+          echo "MT5700M package smoke test: ALL PASSED"
+
       - name: Custom Settings
         run: |
           cd ./wrt/
@@ -303,3 +384,5 @@ jobs:
 
             内核版本：${{env.WRT_KVER}}
             插件列表：${{env.WRT_LIST}}
+
+            MT5700M 插件版本：${{env.MT5700M_VERSION}}

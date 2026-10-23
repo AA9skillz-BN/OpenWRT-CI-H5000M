@@ -75,6 +75,14 @@ UPDATE_PACKAGE "quickfile" "sbwml/luci-app-quickfile" "main"
 UPDATE_PACKAGE "timecontrol" "sirpdboy/luci-app-timecontrol" "main"
 UPDATE_PACKAGE "viking" "VIKINGYFY/packages" "main" "" "axonhub gecoosac sing-box luci-app-homeproxy luci-app-timewol luci-app-wolplus luci-app-wolultra"
 
+# 2026-10-23 移除 qmodem（FUjr/QModem）clone：
+# luci-app-mt5700m 自 3.0.0 起以自有 C 程序 mt5700m-transport 完整覆盖模组管理
+# （AT 串口/TCP、短信、流量、健康检查），运行时不再依赖 QModem 服务；
+# 且 QModem 与 luci-app-mt5700m 会争抢同一 AT 串口，并存存在误操作风险。
+# 本固件 GENERAL.txt 从未启用 luci-app-qmodem，移除 clone 不影响产物，
+# 仅减少每次构建的 clone 耗时与 package 树体积。如需恢复，取消下一行注释：
+#UPDATE_PACKAGE "qmodem" "FUjr/QModem" "main"
+
 # ===== sing-box 过时补丁清理（2026-09-24 定时构建失败根因）=====
 # VIKINGYFY/packages 的 sing-box 自带 patches/100-fix-dns-tcp-close.patch，它是针对
 # 旧版 sing-box 的反向移植（引入上游从未合入的 HandleStreamDNSConnection）。当 feed 把
@@ -103,6 +111,24 @@ UPDATE_PACKAGE "vnt" "lmq8267/luci-app-vnt" "main"
 UPDATE_PACKAGE "luci-app-h5000m-fancontrol" "FAN789/luci-app-h5000m-fancontrol" "main"
 UPDATE_PACKAGE "luci-app-mt5700m" "FAN789/luci-app-mt5700m" "main"
 UPDATE_PACKAGE "luci-app-h5000m-netmode" "FAN789/luci-app-h5000m-netmode" "main"
+
+# ===== luci-app-mt5700m 克隆结果校验与版本记录（2026-10-23）=====
+# 该仓库顶层无 Makefile，由 luci-app-mt5700m/ 与 mt5700m-transport/ 两个子目录
+# 提供包定义（immortalwrt 的 include/scan.mk 以 SCAN_DEPTH=5 扫描 package/ 树，
+# 二级子目录可被正常识别，无需平铺）。这里在上游仓库结构调整时尽早失败，
+# 并把版本号写入 GITHUB_ENV 供 Release Notes 引用。
+MT5700M_APP_DIR="./luci-app-mt5700m/luci-app-mt5700m"
+MT5700M_TP_DIR="./luci-app-mt5700m/mt5700m-transport"
+if [ -f "$MT5700M_APP_DIR/Makefile" ] && [ -f "$MT5700M_TP_DIR/Makefile" ]; then
+	MT5700M_APP_VER=$(sed -n 's/^PKG_VERSION:=//p' "$MT5700M_APP_DIR/Makefile" | head -1)
+	MT5700M_TP_VER=$(sed -n 's/^PKG_VERSION:=//p' "$MT5700M_TP_DIR/Makefile" | head -1)
+	MT5700M_INFO="app ${MT5700M_APP_VER} / transport ${MT5700M_TP_VER}"
+	echo "luci-app-mt5700m version: $MT5700M_INFO"
+	[ -n "${GITHUB_ENV:-}" ] && echo "MT5700M_VERSION=$MT5700M_INFO" >> "$GITHUB_ENV"
+else
+	echo "ERROR: FAN789/luci-app-mt5700m 仓库结构异常：未找到 $MT5700M_APP_DIR/Makefile 或 $MT5700M_TP_DIR/Makefile" >&2
+	exit 1
+fi
 
 #更新软件包版本
 UPDATE_VERSION() {
