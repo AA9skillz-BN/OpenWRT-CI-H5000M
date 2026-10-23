@@ -2,6 +2,38 @@
 
 本仓库的所有重要变更都会记录在此文件中。
 
+## [2026-10-23] 修复初始化环境超时导致 CI 失败
+
+### 背景
+
+10-23 凌晨的 MTK-AUTO（run 39874026966，MEDIATEK-WIFI-YES / VIKINGYFY/immortalwrt）
+在「Initialization Environment」步骤失败，而前两日同一 commit（e94bf52）构建均正常。
+
+### 根因
+
+runner 镜像 20261012 更新后，`apt full-upgrade` 待升级包增至 98 个，并新增
+linux-azure 7.0 内核等 10 个包。下载与解包耗时超过 `apt_retry` 中统一的
+`timeout 300`：日志显示三次尝试分别在 23:47:18 / 23:52:17 / 23:57:27 开始，
+均于整 300 秒被杀，重试耗尽后步骤以 exit 1 结束。
+此前同一构建该步骤耗时 5:12 / 5:46，本就接近 300 秒上限，属镜像更新后被推过阈值。
+
+### 修复
+
+- `.github/workflows/WRT-CORE.yml`：`apt_retry` 改为按命令传入超时
+  （update 300s、install 900s、full-upgrade 1800s），避免慢速下载被误杀。
+- 主机系统升级并非编译必需：`full-upgrade` 失败后执行
+  `dpkg --configure -a` / `apt -f install` 修复状态并继续，不再中断 job。
+- `init_build_environment.sh` 超时 600s → 1800s；三次均失败时显式 `exit 1`
+  （原实现会静默跳过失败继续执行）。
+- `timeout` 增加 `--kill-after=30` 防止残留进程，apt/dpkg 增加
+  `--force-confdef` / `--force-confold` 非交互选项；`Acquire::Retries` 3 → 5。
+
+### 验证
+
+手动 workflow_dispatch 触发 MTK-AUTO（TEST=true，跳过编译）run 39888490893
+全流程成功，`Initialization Environment` 耗时 4 分 42 秒、`full-upgrade`
+一次通过。完整编译链路由次日定时构建覆盖验证。
+
 ## [2026-10-18] 切换构建源码：immortalwrt/immortalwrt@master → VIKINGYFY/immortalwrt@owrt
 
 ### 背景
